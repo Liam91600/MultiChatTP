@@ -1,0 +1,9 @@
+kumuluzee:
+   name: mikky-test
+   version: 1.0.0
+   jwt-auth:
+      enabled: true
+   server:
+      base-url: http://0.0.0.0:8082
+      http:
+         port: 8082

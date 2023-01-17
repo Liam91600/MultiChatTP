@@ -1,0 +1,7 @@
+services:
+  rest-server:
+    build: .
+    image: tpa3/rest-server-app:0.1.0
+    container_name: rest-server
+    ports:
+      - "8082:8082"
