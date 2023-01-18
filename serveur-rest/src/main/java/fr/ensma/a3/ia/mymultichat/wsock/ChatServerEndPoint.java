@@ -32,7 +32,9 @@ public class ChatServerEndPoint {
 
 	
     List<Set<Session>> canaux = new ArrayList<Set<Session>>();
+    
     //créer une liste qui fait le lien entre l'index de la liste canaux et les id des canaux
+    List<Integer> idCanal = new ArrayList<>();
     
     public ChatServerEndPoint() {
     	GestionCanaux gestion_canaux = new GestionCanaux();
@@ -40,7 +42,8 @@ public class ChatServerEndPoint {
     	
     	for (ChatCanalDesc chatCanalDesc : listcanaux) {
     		Set<Session> clients = Collections.synchronizedSet(new HashSet<Session>());
-			canaux.add(chatCanalDesc.getCanalId(),clients);
+			canaux.add(clients);
+			idCanal.add(chatCanalDesc.getCanalId());
 		}	
     }
     
@@ -50,17 +53,20 @@ public class ChatServerEndPoint {
         String[] params = canalandpseudo.split(":");
         sess.getUserProperties().put("pseudo", params[1]);
         sess.getUserProperties().put("canal", params[0]);
+
         System.out.println(params[1] + " vient de se connecter au canal " + params[0]);
-//        clients.add(sess);
-        canaux.get(Integer.valueOf(params[0])).add(sess);
+        
+        canaux.get(idCanal.indexOf(Integer.valueOf(params[0]))).add(sess);
     }
 
     // Réaction du serveur à la réception d'un message.
     @OnMessage
     public void onMessage(ChatMessage mess, Session sess) {
-        for (Session client : canaux.get(mess.getCanalId())) {
+        for (Session client : canaux.get(idCanal.indexOf(mess.getCanalId()))) {
             if (!sess.getId().equals(client.getId())) {
                 try {
+                	System.out.println(canaux);
+                	System.out.println(client);
                     client.getBasicRemote().sendObject(mess);
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
@@ -83,9 +89,9 @@ public class ChatServerEndPoint {
             e1.printStackTrace();
         }
 //        clients.remove(sess);
-        canaux.get((Integer) sess.getUserProperties().get("canal")).remove(sess);
+        canaux.get(idCanal.indexOf((Integer) sess.getUserProperties().get("canal"))).remove(sess);
         ChatMessage mess = new ChatMessage();
-        for (Session client : canaux.get((Integer) sess.getUserProperties().get("canal"))) {
+        for (Session client : canaux.get(idCanal.indexOf((Integer) sess.getUserProperties().get("canal")))) {
             mess.setLePseudo("LeServer");
             mess.setLeContenu((String) sess.getUserProperties().get("pseudo") + " nous a quitté ... (sniff)");
             try {
