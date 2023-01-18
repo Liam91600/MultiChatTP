@@ -35,6 +35,7 @@ public class ChatServerEndPoint {
     
     //créer une liste qui fait le lien entre l'index de la liste canaux et les id des canaux
     List<Integer> idCanal = new ArrayList<>();
+    //testlite
     
     public ChatServerEndPoint() {
     	GestionCanaux gestion_canaux = new GestionCanaux();
