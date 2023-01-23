@@ -33,29 +33,29 @@ public class App {
 
     public static void main(String[] args) {
         PrintStream out = new PrintStream(System.out, true, UTF_8);
-        out.println("Client REST");
+        //out.println("Client REST");
         Client restclient = ClientBuilder.newClient();
         
         String rep = restclient.target(REST_URI_HELLO).request(MediaType.TEXT_PLAIN_TYPE).get(String.class);
-        out.println(rep);
+        //out.println(rep);
         
         ChatCanalDesc canal_res = restclient.target(REST_URI_CHAT).path(String.valueOf(1))
                 .request(MediaType.APPLICATION_JSON).get(ChatCanalDesc.class);
-        out.println(canal_res);
+        //out.println(canal_res);
         
         List<ChatCanalDesc> list_canal = restclient.target(REST_URI_CHAT + "/all").request(MediaType.APPLICATION_JSON).get(new GenericType<List<ChatCanalDesc>>(){});
-        out.println(list_canal);
+        //out.println(list_canal);
         
         restclient.close();
-        out.println("Fin connexion...");
+        //out.println("Fin connexion...");
         
         out.println("Connexion WebSocket :");
         Scanner scan = new Scanner(System.in);
-        out.println("Bienvenu sur Multichat, choisi ton canal ");
+        out.println("Bienvenu sur Multichat, choisi ton canal parmis : \n");
+        out.println(list_canal);
 		int num_canal = scan.nextInt();
 		scan.nextLine();
-
-		out.println("Bienvenue sur le canal" + num_canal + ". Donne ton pseudo : ");
+		out.println("Donne ton pseudo : ");
 		String pseudo = scan.nextLine();
 
         try {

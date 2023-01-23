@@ -30,85 +30,116 @@ import fr.ensma.a3.ia.mymultichat.wsock.coder.ChatMessageEncoder;
 @ServerEndpoint(value = "/ws/multichat/{canalandpseudo}", encoders = ChatMessageEncoder.class, decoders = ChatMessageDecoder.class)
 public class ChatServerEndPoint {
 
-	
-    List<Set<Session>> canaux = new ArrayList<Set<Session>>();
-    
-    //créer une liste qui fait le lien entre l'index de la liste canaux et les id des canaux
-    List<Integer> idCanal = new ArrayList<>();
-    //testlite
-    
-    public ChatServerEndPoint() {
-    	GestionCanaux gestion_canaux = new GestionCanaux();
-    	List<ChatCanalDesc> listcanaux = gestion_canaux.getListCanal();
-    	
-    	for (ChatCanalDesc chatCanalDesc : listcanaux) {
-    		Set<Session> clients = Collections.synchronizedSet(new HashSet<Session>());
-			canaux.add(clients);
-			idCanal.add(chatCanalDesc.getCanalId());
-		}	
-    }
-    
-    @OnOpen
-    public void onOpen(@PathParam("canalandpseudo") String canalandpseudo, Session sess,
-            EndpointConfig endpointConfig) {
-        String[] params = canalandpseudo.split(":");
-        sess.getUserProperties().put("pseudo", params[1]);
-        sess.getUserProperties().put("canal", params[0]);
+	static List<Set<Session>> canaux = new ArrayList<Set<Session>>();
 
-        System.out.println(params[1] + " vient de se connecter au canal " + params[0]);
-        
-        canaux.get(idCanal.indexOf(Integer.valueOf(params[0]))).add(sess);
-    }
+	// créer une liste qui fait le lien entre l'index de la liste canaux et les id
+	// des canaux
+	static List<Integer> idCanal = new ArrayList<>();
 
-    // Réaction du serveur à la réception d'un message.
-    @OnMessage
-    public void onMessage(ChatMessage mess, Session sess) {
-        for (Session client : canaux.get(idCanal.indexOf(mess.getCanalId()))) {
-            if (!sess.getId().equals(client.getId())) {
-                try {
-                	System.out.println(canaux);
-                	System.out.println(client);
-                    client.getBasicRemote().sendObject(mess);
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                } catch (EncodeException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+	public ChatServerEndPoint() {
 
-    @OnClose
-    public void onClose(Session sess) {
-        System.out.println(sess.getUserProperties().get("pseudo") + " vient de se déconnecter ...");
-        try {
-            sess.close();
-        } catch (IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
-//        clients.remove(sess);
-        canaux.get(idCanal.indexOf((Integer) sess.getUserProperties().get("canal"))).remove(sess);
-        ChatMessage mess = new ChatMessage();
-        for (Session client : canaux.get(idCanal.indexOf((Integer) sess.getUserProperties().get("canal")))) {
-            mess.setLePseudo("LeServer");
-            mess.setLeContenu((String) sess.getUserProperties().get("pseudo") + " nous a quitté ... (sniff)");
-            try {
-                client.getBasicRemote().sendObject(mess);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (EncodeException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-    }
+	}
 
-    @OnError
-    public void onError(Session session, Throwable t) {
-        t.printStackTrace();
-    }
+	@OnOpen
+	public void onOpen(@PathParam("canalandpseudo") String canalandpseudo, Session sess,
+			EndpointConfig endpointConfig) {
+		
+		GestionCanaux gestion_canaux = new GestionCanaux();
+		List<ChatCanalDesc> listcanaux = gestion_canaux.getListCanal();
+		List<Integer> listeidcanaux = new ArrayList<>();
+		for (ChatCanalDesc chatCanalDesc : listcanaux) {
+			listeidcanaux.add(chatCanalDesc.getCanalId());
+		}
+		
+		String[] params = canalandpseudo.split(":");
+		sess.getUserProperties().put("pseudo", params[1]);
+		sess.getUserProperties().put("canal", params[0]);
+
+		System.out.println(sess);
+		System.out.println(params[1] + " vient de se connecter au canal " + params[0]);
+
+		if (!listeidcanaux.contains(Integer.valueOf(params[0]))) {
+			ChatMessage mess = new ChatMessage();
+
+			try {
+				mess.setLePseudo("LeServer");
+				mess.setLeContenu("Ce canal n'existe pas");
+				sess.getBasicRemote().sendObject(mess);
+				sess.close();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			} catch (EncodeException e) {
+				e.printStackTrace();
+			}
+		}
+		else if (!idCanal.contains(Integer.valueOf(params[0]))) {
+			canaux.add(Collections.synchronizedSet(new HashSet<Session>()));
+			idCanal.add(Integer.valueOf(params[0]));
+			canaux.get(idCanal.indexOf(Integer.valueOf(params[0]))).add(sess);
+		}
+		else {
+			canaux.get(idCanal.indexOf(Integer.valueOf(params[0]))).add(sess);
+		}
+		
+		
+
+		
+
+		System.out.println(canaux);
+	}
+
+	// Réaction du serveur à la réception d'un message.
+	@OnMessage
+	public void onMessage(ChatMessage mess, Session sess) {
+		for (Session client : canaux.get(idCanal.indexOf(mess.getCanalId()))) {
+			if (!sess.getId().equals(client.getId())) {
+				try {
+					client.getBasicRemote().sendObject(mess);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (EncodeException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	@OnClose
+	public void onClose(Session sess) {
+		Integer idcanal = Integer.valueOf((String) sess.getUserProperties().get("canal"));
+		String pseudo = (String) sess.getUserProperties().get("pseudo");
+		
+		System.out.println(pseudo + " vient de se déconnecter ...");
+		
+		try {
+			sess.close();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		canaux.get(idCanal.indexOf(idcanal)).remove(sess);
+		System.out.println(canaux);
+		ChatMessage mess = new ChatMessage();
+		for (Session client : canaux.get(idCanal.indexOf(idcanal))) {
+			mess.setLePseudo("LeServer");
+			mess.setLeContenu(pseudo + " nous a quitté ... (sniff)");
+			try {
+				client.getBasicRemote().sendObject(mess);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (EncodeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@OnError
+	public void onError(Session session, Throwable t) {
+		t.printStackTrace();
+	}
 }
