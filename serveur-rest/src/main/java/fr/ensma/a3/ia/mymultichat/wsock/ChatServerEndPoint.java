@@ -140,6 +140,10 @@ public class ChatServerEndPoint {
 		}
 
 		canaux.get(idCanal.indexOf(idcanal)).remove(sess);
+		if (canaux.get(idCanal.indexOf(idcanal)).size() == 0) {
+			canaux.remove(idCanal.indexOf(idcanal));
+			idCanal.remove(idCanal.indexOf(idcanal));
+		}
 		System.out.println(canaux);
 		ChatMessage mess = new ChatMessage();
 		for (Session client : canaux.get(idCanal.indexOf(idcanal))) {
