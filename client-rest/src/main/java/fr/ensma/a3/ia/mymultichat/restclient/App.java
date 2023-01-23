@@ -6,6 +6,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -53,8 +54,21 @@ public class App {
         Scanner scan = new Scanner(System.in);
         out.println("Bienvenu sur Multichat, choisi ton canal parmis : \n");
         out.println(list_canal);
+        List<Integer> listeidcanaux = new ArrayList<>();
+        for (ChatCanalDesc ccd : list_canal) {
+        	listeidcanaux.add(ccd.getCanalId());
+        }
+        
 		int num_canal = scan.nextInt();
 		scan.nextLine();
+		while (!listeidcanaux.contains(num_canal)) {
+			System.out.println("Ce canal n'existe pas, choisis en un autre : ");
+			
+			num_canal = scan.nextInt();
+			scan.nextLine();
+		}
+		
+		
 		out.println("Donne ton pseudo : ");
 		String pseudo = scan.nextLine();
 

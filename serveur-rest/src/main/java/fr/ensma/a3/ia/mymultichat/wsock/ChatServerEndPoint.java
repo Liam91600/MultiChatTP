@@ -58,28 +58,31 @@ public class ChatServerEndPoint {
 		System.out.println(sess);
 		System.out.println(params[1] + " vient de se connecter au canal " + params[0]);
 
-		if (!listeidcanaux.contains(Integer.valueOf(params[0]))) {
-			ChatMessage mess = new ChatMessage();
+//		if (!listeidcanaux.contains(Integer.valueOf(params[0]))) {
+//			ChatMessage mess = new ChatMessage();
 
-			try {
-				mess.setLePseudo("LeServer");
-				mess.setLeContenu("Ce canal n'existe pas");
-				sess.getBasicRemote().sendObject(mess);
-				sess.close();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			} catch (EncodeException e) {
-				e.printStackTrace();
-			}
-		}
-		else if (!idCanal.contains(Integer.valueOf(params[0]))) {
+//			try {
+//				mess.setLePseudo("LeServer");
+//				mess.setLeContenu("Ce canal n'existe pas");
+//				sess.getBasicRemote().sendObject(mess);
+//				sess.close();
+//			} catch (IOException e1) {
+//				e1.printStackTrace();
+//			} catch (EncodeException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//		else if (!idCanal.contains(Integer.valueOf(params[0]))) {
+			
+		if (!idCanal.contains(Integer.valueOf(params[0]))) {
+			
+		
 			canaux.add(Collections.synchronizedSet(new HashSet<Session>()));
 			idCanal.add(Integer.valueOf(params[0]));
-			canaux.get(idCanal.indexOf(Integer.valueOf(params[0]))).add(sess);
 		}
-		else {
-			canaux.get(idCanal.indexOf(Integer.valueOf(params[0]))).add(sess);
-		}
+
+		canaux.get(idCanal.indexOf(Integer.valueOf(params[0]))).add(sess);
+
 		
 		
 
