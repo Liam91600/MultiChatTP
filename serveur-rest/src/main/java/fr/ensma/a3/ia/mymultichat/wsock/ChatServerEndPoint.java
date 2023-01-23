@@ -67,6 +67,22 @@ public class ChatServerEndPoint {
 		}
 
 		System.out.println(canaux);
+
+		if (sess.getId().equals(jeuxChaudFroid.get(idCanal.indexOf(Integer.valueOf(params[0]))).getIdJoueurCourant())) {
+			ChatMessage message_tour_de_jeu = new ChatMessage();
+			message_tour_de_jeu.setLePseudo("LeServer");
+			message_tour_de_jeu.setLeContenu("C'est à vous de jouer, proposez un nombre entier de 0 à 100 : ");
+			System.out.println("\n");
+
+			try {
+				sess.getBasicRemote().sendObject(message_tour_de_jeu);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (EncodeException e) {
+				e.printStackTrace();
+			}
+		}
+
 	}
 
 	// Réaction du serveur à la réception d'un message.
@@ -80,10 +96,10 @@ public class ChatServerEndPoint {
 																							// tour de jouer
 
 			String reponse_jeu = jeuxChaudFroid.get(index_canal).proposeNombre(Integer.valueOf(mess.getLeContenu()));
+			ChatMessage reponse_jeu_chatmessage = new ChatMessage();
+			reponse_jeu_chatmessage.setLeContenu(reponse_jeu);
+			reponse_jeu_chatmessage.setLePseudo("LeServer");
 			try {
-				ChatMessage reponse_jeu_chatmessage = new ChatMessage();
-				reponse_jeu_chatmessage.setLeContenu(reponse_jeu);
-				reponse_jeu_chatmessage.setLePseudo("LeServer");
 				sess.getBasicRemote().sendObject(reponse_jeu_chatmessage);
 
 			} catch (IOException e) {
@@ -96,6 +112,7 @@ public class ChatServerEndPoint {
 				if (!sess.getId().equals(client.getId())) {
 					try {
 						client.getBasicRemote().sendObject(mess);
+						client.getBasicRemote().sendObject(reponse_jeu_chatmessage);
 
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -104,7 +121,15 @@ public class ChatServerEndPoint {
 					}
 				}
 
-				if (client.getId().equals(jeuxChaudFroid.get(index_canal).getIdJoueurCourant())) {
+				if (client.getId().equals(jeuxChaudFroid.get(index_canal).getIdJoueurCourant())
+						&& jeuxChaudFroid.get(index_canal).getJeuEnCours() == true) { // le joueur est
+					// passé au suivant
+					// dans le premier
+					// bloc if grace à
+					// proposeNombre, on
+					// previent donc le
+					// joueur suivant de
+					// son tour de jeu
 
 					ChatMessage message_tour_de_jeu = new ChatMessage();
 					message_tour_de_jeu.setLePseudo("LeServer");
@@ -119,10 +144,45 @@ public class ChatServerEndPoint {
 						e.printStackTrace();
 					}
 				}
+
+			}
+
+			if (jeuxChaudFroid.get(index_canal).getJeuEnCours() == false) {
+
+				ChatMessage msg_gagnant = new ChatMessage();
+				msg_gagnant.setLeContenu(mess.getLePseudo() + " à trouvé la bonne valeur, fermeture du canal dans 5s");
+				msg_gagnant.setLePseudo("LeServer");
+
+				for (Session client : canaux.get(index_canal)) {
+					try {
+						client.getBasicRemote().sendObject(msg_gagnant);
+					} catch (EncodeException e) {
+						e.printStackTrace();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+
+				}
+				
+				try { // on ferme dans 5s
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+				for (Session client : canaux.get(index_canal)) {
+					try {
+						client.close();
+						Thread.sleep(1000);
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
 			}
 
 		}
-
 	}
 
 	@OnClose
@@ -143,22 +203,24 @@ public class ChatServerEndPoint {
 		if (canaux.get(idCanal.indexOf(idcanal)).size() == 0) {
 			canaux.remove(idCanal.indexOf(idcanal));
 			idCanal.remove(idCanal.indexOf(idcanal));
-		}
-		System.out.println(canaux);
-		ChatMessage mess = new ChatMessage();
-		for (Session client : canaux.get(idCanal.indexOf(idcanal))) {
-			mess.setLePseudo("LeServer");
-			mess.setLeContenu(pseudo + " nous a quitté ... (sniff)");
-			try {
-				client.getBasicRemote().sendObject(mess);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (EncodeException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		} else {
+			ChatMessage mess = new ChatMessage();
+			for (Session client : canaux.get(idCanal.indexOf(idcanal))) {
+				mess.setLePseudo("LeServer");
+				mess.setLeContenu(pseudo + " nous a quitté ... (sniff)");
+				try {
+					client.getBasicRemote().sendObject(mess);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (EncodeException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
+
+		// System.out.println(canaux);
 	}
 
 	@OnError

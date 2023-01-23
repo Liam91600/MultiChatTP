@@ -8,6 +8,7 @@ public class JeuChaudFroid {
 	private int nombre;
 	private String idJoueurCourant; //id du joueur auquel c'est le tour de jouer
 	private List<String> idJoueurs; // liste de tous les joueurs
+	private boolean jeuEnCours;
 	
 	
 	public JeuChaudFroid(int borne_max, String id) {
@@ -15,6 +16,7 @@ public class JeuChaudFroid {
 		idJoueurs = new ArrayList<>();
 		idJoueurs.add(id);
 		idJoueurCourant = idJoueurs.get(0);
+		jeuEnCours = true;
 	}
 	
 	public String proposeNombre(int n) {
@@ -29,10 +31,13 @@ public class JeuChaudFroid {
 			return "trop petit";
 		}
 		else {
+			jeuEnCours = false;
 			return "bravo !";
 		}
-		
-		
+	}
+	
+	public boolean getJeuEnCours() {
+		return jeuEnCours;
 	}
 	
 	
